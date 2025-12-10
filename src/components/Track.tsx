@@ -5,8 +5,10 @@ interface TrackProps {
 }
 
 export const Track = ({ isRunning }: TrackProps) => {
+  const trackRadius = 120; // Distance from center to track
+
   return (
-    <div className="relative w-80 h-80 mx-auto">
+    <div className="relative w-80 h-80 mx-auto overflow-hidden">
       {/* Grass background */}
       <div className="absolute inset-0 rounded-full bg-grass" />
       
@@ -25,7 +27,7 @@ export const Track = ({ isRunning }: TrackProps) => {
             left: "50%",
             top: "50%",
             transformOrigin: "center center",
-            transform: `rotate(${i * 22.5}deg) translateY(-120px) translateX(-2px)`,
+            transform: `rotate(${i * 22.5}deg) translateY(-${trackRadius}px) translateX(-2px)`,
           }}
         />
       ))}
@@ -35,13 +37,27 @@ export const Track = ({ isRunning }: TrackProps) => {
         <div className="w-8 h-8 rounded-full bg-accent/40" />
       </div>
       
-      {/* Train container - positioned on track */}
+      {/* Train wrapper - centered in track area */}
       <div 
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 0, height: 0 }}
+        className="absolute inset-0 flex items-center justify-center"
+        style={{ pointerEvents: 'none' }}
       >
-        <div className={isRunning ? "train-running" : ""}>
-          <div style={{ transform: "translateX(120px)" }}>
+        <div 
+          className={isRunning ? "train-animation" : ""}
+          style={{
+            width: 0,
+            height: 0,
+            position: 'relative',
+          }}
+        >
+          <div 
+            style={{ 
+              position: 'absolute',
+              left: `${trackRadius}px`,
+              top: '-17px', // Half of train height to center on track
+              transform: 'rotate(90deg)', // Face the direction of travel
+            }}
+          >
             <Train isRunning={isRunning} />
           </div>
         </div>
