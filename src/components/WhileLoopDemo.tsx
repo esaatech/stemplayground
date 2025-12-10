@@ -3,17 +3,15 @@ import { Track } from "./Track";
 import { FuelToggle } from "./FuelToggle";
 import { ControlPanel } from "./ControlPanel";
 import { CodeDisplay } from "./CodeDisplay";
-import { toast } from "sonner";
 
 const LOOP_DURATION = 3000; // 3 seconds per loop
-const CHECK_DELAY = 1500; // Time to show the check bubbles
 
 export const WhileLoopDemo = () => {
   const [fuel, setFuel] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<boolean | null>(null);
+  const [showNoFuelMessage, setShowNoFuelMessage] = useState(false);
   const [currentLine, setCurrentLine] = useState(1);
   const [loopCount, setLoopCount] = useState(0);
   const [rotation, setRotation] = useState(0);
@@ -32,23 +30,31 @@ export const WhileLoopDemo = () => {
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
-  const performCheck = useCallback(() => {
-    return new Promise<boolean>((resolve) => {
+  const performCheck = useCallback((): Promise<boolean> => {
+    return new Promise((resolve) => {
       setIsChecking(true);
       setCurrentLine(1);
       setCheckResult(null);
+      setShowNoFuelMessage(false);
       
       // Show question first
       setTimeout(() => {
         // Then show answer
-        setCheckResult(fuelRef.current);
+        const hasFuel = fuelRef.current;
+        setCheckResult(hasFuel);
         
         setTimeout(() => {
           setIsChecking(false);
-          setCheckResult(null);
-          resolve(fuelRef.current);
-        }, 800);
-      }, 700);
+          
+          if (!hasFuel) {
+            // Show the "can't loop" message
+            setShowNoFuelMessage(true);
+            setCurrentLine(4);
+          }
+          
+          resolve(hasFuel);
+        }, 1000);
+      }, 800);
     });
   }, []);
 
@@ -86,13 +92,9 @@ export const WhileLoopDemo = () => {
           
           if (hasFuel && isRunningRef.current) {
             setCurrentLine(2);
-            setIsAnimating(true);
             animateLoop();
           } else {
             setIsRunning(false);
-            setIsAnimating(false);
-            setCurrentLine(4);
-            toast.info("Train stopped! 🛑", { description: "fuel == False" });
           }
         }, 300);
       }
@@ -102,46 +104,38 @@ export const WhileLoopDemo = () => {
   }, [rotation, performCheck]);
 
   const handleRun = async () => {
-    if (!fuel) {
-      toast.warning("Cannot start! ⚠️", { 
-        description: "Fuel is False. Toggle fuel to True first!" 
-      });
-      return;
-    }
-    
+    // Always perform the check first - this is the while loop condition!
     setIsRunning(true);
-    toast.success("Train starting! 🚂", { description: "Entering while loop..." });
+    setShowNoFuelMessage(false);
+    setCheckResult(null);
     
-    // Initial check
     const hasFuel = await performCheck();
     
-    if (hasFuel && isRunningRef.current) {
+    if (hasFuel) {
       setCurrentLine(2);
-      setIsAnimating(true);
       animateLoop();
     } else {
+      // Don't actually "run" - the check showed NO
       setIsRunning(false);
-      setCurrentLine(4);
     }
   };
 
   const handleStop = () => {
     setIsRunning(false);
-    setIsAnimating(false);
     setIsChecking(false);
     setCheckResult(null);
+    setShowNoFuelMessage(false);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
     setCurrentLine(4);
-    toast.info("Train stopped manually! 🛑");
   };
 
   const handleReset = () => {
     setIsRunning(false);
-    setIsAnimating(false);
     setIsChecking(false);
     setCheckResult(null);
+    setShowNoFuelMessage(false);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -149,15 +143,14 @@ export const WhileLoopDemo = () => {
     setCurrentLine(1);
     setLoopCount(0);
     setRotation(0);
-    toast.success("Reset complete! 🔄", { description: "Ready to run again." });
   };
 
   const handleFuelToggle = (value: boolean) => {
     setFuel(value);
-    if (!value && isRunning) {
-      toast.info("Fuel depleted! ⛽", { 
-        description: "Train will stop after current loop." 
-      });
+    // Clear the no fuel message when toggling
+    if (value) {
+      setShowNoFuelMessage(false);
+      setCheckResult(null);
     }
   };
 
@@ -182,7 +175,7 @@ export const WhileLoopDemo = () => {
               rotation={rotation} 
               isChecking={isChecking}
               checkResult={checkResult}
-              fuel={fuel}
+              showNoFuelMessage={showNoFuelMessage}
             />
             
             <div className="flex justify-center">
@@ -221,15 +214,19 @@ export const WhileLoopDemo = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">2.</span>
-              <span>The train checks if <code className="font-mono text-secondary">fuel == True</code> before each loop</span>
+              <span>The train <strong>always checks first</strong>: "Do I have fuel?"</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">3.</span>
-              <span>Watch the thought bubbles - the train asks "Do I have fuel?" and gets an answer</span>
+              <span>If YES → train moves one loop, then checks again</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">4.</span>
-              <span>Toggle <strong>Fuel</strong> to <code className="font-mono text-no-color">False</code> to stop the train</span>
+              <span>If NO → train cannot loop and stops immediately</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">5.</span>
+              <span>Toggle <strong>Fuel</strong> to <code className="font-mono text-no-color">False</code> and click Run to see what happens!</span>
             </li>
           </ul>
         </div>

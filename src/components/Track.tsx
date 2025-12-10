@@ -5,19 +5,20 @@ interface TrackProps {
   rotation: number;
   isChecking: boolean;
   checkResult: boolean | null;
-  fuel: boolean;
+  showNoFuelMessage: boolean;
 }
 
-export const Track = ({ rotation, isChecking, checkResult, fuel }: TrackProps) => {
+export const Track = ({ rotation, isChecking, checkResult, showNoFuelMessage }: TrackProps) => {
   const trackRadius = 120;
 
   return (
     <div className="relative w-80 h-80 mx-auto">
       {/* Thought bubbles - positioned above the track */}
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-20">
+      <div className="absolute -top-28 left-1/2 -translate-x-1/2 z-20">
         <ThoughtBubble 
-          isVisible={isChecking} 
+          isVisible={isChecking || showNoFuelMessage} 
           checkResult={checkResult}
+          showNoFuelMessage={showNoFuelMessage}
         />
       </div>
       
@@ -66,7 +67,6 @@ export const Track = ({ rotation, isChecking, checkResult, fuel }: TrackProps) =
           className="absolute inset-0 flex items-center justify-center"
           style={{ 
             transform: `rotate(${rotation}deg)`,
-            transition: isChecking ? 'none' : undefined,
           }}
         >
           <div 
@@ -77,7 +77,7 @@ export const Track = ({ rotation, isChecking, checkResult, fuel }: TrackProps) =
               transform: 'translateX(-50%) rotate(90deg)',
             }}
           >
-            <Train isRunning={!isChecking && rotation > 0} />
+            <Train isRunning={!isChecking && !showNoFuelMessage} />
           </div>
         </div>
       </div>
