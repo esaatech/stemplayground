@@ -7,10 +7,10 @@ interface CodeDisplayProps {
 
 export const CodeDisplay = ({ currentLine, isRunning }: CodeDisplayProps) => {
   const lines = [
-    { num: 1, code: "while fuel == True:", indent: 0 },
-    { num: 2, code: "move_train_one_loop()", indent: 1 },
-    { num: 3, code: "check_fuel_again()", indent: 1 },
-    { num: 4, code: "stop()", indent: 0 },
+    { num: 1, code: "while fuel == True:", indent: 0, highlight: "keyword" },
+    { num: 2, code: "move_train_one_loop()", indent: 1, highlight: "function" },
+    { num: 3, code: "check_fuel_again()", indent: 1, highlight: "function" },
+    { num: 4, code: "stop()", indent: 0, highlight: "function" },
   ];
 
   return (
@@ -27,7 +27,7 @@ export const CodeDisplay = ({ currentLine, isRunning }: CodeDisplayProps) => {
           <div
             key={line.num}
             className={cn(
-              "flex items-center gap-3 px-2 py-1 rounded transition-all duration-300",
+              "flex items-center gap-3 px-2 py-1.5 rounded transition-all duration-300",
               isRunning && currentLine === line.num && "bg-secondary/30"
             )}
           >
@@ -36,7 +36,7 @@ export const CodeDisplay = ({ currentLine, isRunning }: CodeDisplayProps) => {
             </span>
             <span 
               className={cn(
-                "transition-colors",
+                "transition-colors flex-1",
                 isRunning && currentLine === line.num 
                   ? "text-secondary" 
                   : "text-muted"
@@ -50,6 +50,16 @@ export const CodeDisplay = ({ currentLine, isRunning }: CodeDisplayProps) => {
             )}
           </div>
         ))}
+      </div>
+      
+      {/* Explanation text */}
+      <div className="mt-4 pt-3 border-t border-muted-foreground/20">
+        <p className="text-muted-foreground/70 text-xs">
+          {currentLine === 1 && "Checking condition: fuel == True?"}
+          {currentLine === 2 && "Moving train around the track..."}
+          {currentLine === 3 && "Loop complete! Checking fuel again..."}
+          {currentLine === 4 && "Loop ended - train stopped."}
+        </p>
       </div>
     </div>
   );
