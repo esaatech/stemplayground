@@ -1,64 +1,83 @@
 import { Train } from "./Train";
+import { ThoughtBubble } from "./ThoughtBubble";
 
 interface TrackProps {
-  isRunning: boolean;
+  rotation: number;
+  isChecking: boolean;
+  checkResult: boolean | null;
+  fuel: boolean;
 }
 
-export const Track = ({ isRunning }: TrackProps) => {
-  const trackRadius = 120; // Distance from center to track
+export const Track = ({ rotation, isChecking, checkResult, fuel }: TrackProps) => {
+  const trackRadius = 120;
 
   return (
-    <div className="relative w-80 h-80 mx-auto overflow-hidden">
-      {/* Grass background */}
-      <div className="absolute inset-0 rounded-full bg-grass" />
-      
-      {/* Outer track */}
-      <div className="absolute inset-4 rounded-full border-[20px] border-track shadow-inner" />
-      
-      {/* Inner grass */}
-      <div className="absolute inset-12 rounded-full bg-grass" />
-      
-      {/* Track ties (sleepers) */}
-      {[...Array(16)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-6 bg-wood rounded"
-          style={{
-            left: "50%",
-            top: "50%",
-            transformOrigin: "center center",
-            transform: `rotate(${i * 22.5}deg) translateY(-${trackRadius}px) translateX(-2px)`,
-          }}
+    <div className="relative w-80 h-80 mx-auto">
+      {/* Thought bubbles - positioned above the track */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-20">
+        <ThoughtBubble 
+          isVisible={isChecking} 
+          checkResult={checkResult}
         />
-      ))}
-      
-      {/* Center decoration */}
-      <div className="absolute inset-20 rounded-full bg-accent/20 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-accent/40" />
       </div>
       
-      {/* Train wrapper - centered in track area */}
-      <div 
-        className="absolute inset-0 flex items-center justify-center"
-        style={{ pointerEvents: 'none' }}
-      >
+      {/* Track container */}
+      <div className="relative w-full h-full overflow-hidden">
+        {/* Grass background */}
+        <div className="absolute inset-0 rounded-full bg-grass" />
+        
+        {/* Outer track */}
+        <div className="absolute inset-4 rounded-full border-[20px] border-track shadow-inner" />
+        
+        {/* Inner grass */}
+        <div className="absolute inset-12 rounded-full bg-grass" />
+        
+        {/* Track ties (sleepers) */}
+        {[...Array(16)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-6 bg-wood rounded"
+            style={{
+              left: "50%",
+              top: "50%",
+              transformOrigin: "center center",
+              transform: `rotate(${i * 22.5}deg) translateY(-${trackRadius}px) translateX(-2px)`,
+            }}
+          />
+        ))}
+        
+        {/* Center decoration */}
+        <div className="absolute inset-20 rounded-full bg-accent/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-accent/40" />
+        </div>
+        
+        {/* Starting point marker */}
         <div 
-          className={isRunning ? "train-animation" : ""}
+          className="absolute w-4 h-4 bg-secondary rounded-full border-2 border-secondary-foreground shadow-lg z-10"
           style={{
-            width: 0,
-            height: 0,
-            position: 'relative',
+            left: "50%",
+            top: "24px",
+            transform: "translateX(-50%)",
+          }}
+        />
+        
+        {/* Train wrapper */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ 
+            transform: `rotate(${rotation}deg)`,
+            transition: isChecking ? 'none' : undefined,
           }}
         >
           <div 
-            style={{ 
+            style={{
               position: 'absolute',
-              left: `${trackRadius}px`,
-              top: '-17px', // Half of train height to center on track
-              transform: 'rotate(90deg)', // Face the direction of travel
+              top: `calc(50% - ${trackRadius}px - 17px)`,
+              left: '50%',
+              transform: 'translateX(-50%) rotate(90deg)',
             }}
           >
-            <Train isRunning={isRunning} />
+            <Train isRunning={!isChecking && rotation > 0} />
           </div>
         </div>
       </div>

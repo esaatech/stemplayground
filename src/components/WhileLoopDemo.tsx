@@ -1,24 +1,29 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Track } from "./Track";
-import { ConditionBubble } from "./ConditionBubble";
 import { FuelToggle } from "./FuelToggle";
 import { ControlPanel } from "./ControlPanel";
 import { CodeDisplay } from "./CodeDisplay";
 import { toast } from "sonner";
 
 const LOOP_DURATION = 3000; // 3 seconds per loop
+const CHECK_DELAY = 1500; // Time to show the check bubbles
 
 export const WhileLoopDemo = () => {
   const [fuel, setFuel] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<boolean | null>(null);
   const [currentLine, setCurrentLine] = useState(1);
   const [loopCount, setLoopCount] = useState(0);
+  const [rotation, setRotation] = useState(0);
   
   const fuelRef = useRef(fuel);
   const isRunningRef = useRef(isRunning);
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const startRotationRef = useRef<number>(0);
   
-  // Keep refs in sync
   useEffect(() => {
     fuelRef.current = fuel;
   }, [fuel]);
@@ -27,45 +32,76 @@ export const WhileLoopDemo = () => {
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
-  const runLoop = useCallback(() => {
-    if (!fuelRef.current || !isRunningRef.current) {
-      setIsRunning(false);
-      setCurrentLine(4);
-      toast.info("Train stopped! 🛑", { description: "fuel == False" });
-      return;
-    }
-
-    // Check condition (line 1)
-    setIsChecking(true);
-    setCurrentLine(1);
-    
-    setTimeout(() => {
-      setIsChecking(false);
+  const performCheck = useCallback(() => {
+    return new Promise<boolean>((resolve) => {
+      setIsChecking(true);
+      setCurrentLine(1);
+      setCheckResult(null);
       
-      if (!fuelRef.current || !isRunningRef.current) {
-        setIsRunning(false);
-        setCurrentLine(4);
-        toast.info("Train stopped! 🛑", { description: "fuel == False" });
+      // Show question first
+      setTimeout(() => {
+        // Then show answer
+        setCheckResult(fuelRef.current);
+        
+        setTimeout(() => {
+          setIsChecking(false);
+          setCheckResult(null);
+          resolve(fuelRef.current);
+        }, 800);
+      }, 700);
+    });
+  }, []);
+
+  const animateLoop = useCallback(() => {
+    const startTime = performance.now();
+    startTimeRef.current = startTime;
+    startRotationRef.current = rotation;
+    
+    const animate = (currentTime: number) => {
+      if (!isRunningRef.current) {
         return;
       }
       
-      // Move train (line 2)
-      setCurrentLine(2);
+      const elapsed = currentTime - startTimeRef.current;
+      const progress = Math.min(elapsed / LOOP_DURATION, 1);
       
-      setTimeout(() => {
-        // Check fuel again (line 3)
-        setCurrentLine(3);
+      // Easing function for smoother animation
+      const easeInOut = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      const easedProgress = easeInOut(progress);
+      
+      const newRotation = startRotationRef.current + (360 * easedProgress);
+      setRotation(newRotation);
+      
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Loop complete
+        setRotation(startRotationRef.current + 360);
         setLoopCount(prev => prev + 1);
+        setCurrentLine(3);
         
-        setTimeout(() => {
-          // Loop back or stop
-          runLoop();
-        }, 500);
-      }, LOOP_DURATION - 1000);
-    }, 500);
-  }, []);
+        // Small delay then check again
+        setTimeout(async () => {
+          const hasFuel = await performCheck();
+          
+          if (hasFuel && isRunningRef.current) {
+            setCurrentLine(2);
+            setIsAnimating(true);
+            animateLoop();
+          } else {
+            setIsRunning(false);
+            setIsAnimating(false);
+            setCurrentLine(4);
+            toast.info("Train stopped! 🛑", { description: "fuel == False" });
+          }
+        }, 300);
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+  }, [rotation, performCheck]);
 
-  const handleRun = () => {
+  const handleRun = async () => {
     if (!fuel) {
       toast.warning("Cannot start! ⚠️", { 
         description: "Fuel is False. Toggle fuel to True first!" 
@@ -74,27 +110,45 @@ export const WhileLoopDemo = () => {
     }
     
     setIsRunning(true);
-    setCurrentLine(1);
     toast.success("Train starting! 🚂", { description: "Entering while loop..." });
     
-    // Small delay to let state update
-    setTimeout(() => {
-      runLoop();
-    }, 100);
+    // Initial check
+    const hasFuel = await performCheck();
+    
+    if (hasFuel && isRunningRef.current) {
+      setCurrentLine(2);
+      setIsAnimating(true);
+      animateLoop();
+    } else {
+      setIsRunning(false);
+      setCurrentLine(4);
+    }
   };
 
   const handleStop = () => {
     setIsRunning(false);
+    setIsAnimating(false);
+    setIsChecking(false);
+    setCheckResult(null);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
     setCurrentLine(4);
     toast.info("Train stopped manually! 🛑");
   };
 
   const handleReset = () => {
     setIsRunning(false);
+    setIsAnimating(false);
+    setIsChecking(false);
+    setCheckResult(null);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
     setFuel(true);
     setCurrentLine(1);
     setLoopCount(0);
-    setIsChecking(false);
+    setRotation(0);
     toast.success("Reset complete! 🔄", { description: "Ready to run again." });
   };
 
@@ -124,7 +178,12 @@ export const WhileLoopDemo = () => {
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Left side - Track and controls */}
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <Track isRunning={isRunning} />
+            <Track 
+              rotation={rotation} 
+              isChecking={isChecking}
+              checkResult={checkResult}
+              fuel={fuel}
+            />
             
             <div className="flex justify-center">
               <ControlPanel
@@ -144,11 +203,9 @@ export const WhileLoopDemo = () => {
 
           {/* Right side - Logic display */}
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <ConditionBubble fuel={fuel} isChecking={isChecking} />
-            
             <FuelToggle fuel={fuel} onToggle={handleFuelToggle} />
             
-            <CodeDisplay currentLine={currentLine} isRunning={isRunning} />
+            <CodeDisplay currentLine={currentLine} isRunning={isRunning || isChecking} />
           </div>
         </div>
 
@@ -168,11 +225,11 @@ export const WhileLoopDemo = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">3.</span>
-              <span>Toggle <strong>Fuel</strong> to <code className="font-mono text-no-color">False</code> to stop the train</span>
+              <span>Watch the thought bubbles - the train asks "Do I have fuel?" and gets an answer</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">4.</span>
-              <span>Click <strong>Reset</strong> to start over</span>
+              <span>Toggle <strong>Fuel</strong> to <code className="font-mono text-no-color">False</code> to stop the train</span>
             </li>
           </ul>
         </div>
