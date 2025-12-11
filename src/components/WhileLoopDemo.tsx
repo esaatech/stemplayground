@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Info } from "lucide-react";
 import { Track } from "./Track";
 import { FuelToggle } from "./FuelToggle";
@@ -167,6 +168,14 @@ export const WhileLoopDemo = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Back Navigation */}
+        <Link 
+          to="/programming/python" 
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
+          <span>←</span> Back to Python
+        </Link>
+
         {/* Header */}
         <header className="text-center space-y-2 animate-fade-in relative">
           <div className="absolute top-0 right-0 md:right-4">
@@ -198,11 +207,11 @@ export const WhileLoopDemo = () => {
                     <h3 className="text-lg font-semibold text-foreground">The Code Structure</h3>
                     <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm border border-border">
                       <div className="space-y-1">
-                        <div><span className="text-muted-foreground/50">1</span> <span className="text-secondary">while</span> <span className="text-foreground">Fuel:</span></div>
-                        <div className="pl-6"><span className="text-muted-foreground/50">2</span> <span className="text-foreground">move_train_one_loop()</span></div>
+                        <div><span className="text-muted-foreground/50">1</span> <span className="text-secondary">while</span> <span className="text-white">Fuel:</span></div>
+                        <div className="pl-6"><span className="text-muted-foreground/50">2</span> <span className="text-white">move_train_one_loop()</span></div>
                       </div>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-white text-sm">
                       The condition <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel</code> is checked automatically by the while loop. If <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = True</code>, the loop continues. If <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = False</code>, the loop stops.
                     </p>
                   </div>

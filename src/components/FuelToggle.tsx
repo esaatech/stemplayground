@@ -9,6 +9,9 @@ interface FuelToggleProps {
 export const FuelToggle = ({ fuel, onToggle }: FuelToggleProps) => {
   return (
     <div className="flex flex-col items-center gap-3 p-5 bg-card rounded-xl border border-border shadow-md">
+      <div className="w-full text-center">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-bold">Condition</p>
+      </div>
       <div className="flex items-center gap-3">
         <span className="text-2xl">⛽</span>
         <span className="text-lg font-semibold text-foreground">Fuel</span>
