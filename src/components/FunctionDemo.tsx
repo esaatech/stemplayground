@@ -805,6 +805,25 @@ export const FunctionDemo = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [currentExample, setCurrentExample] = useState<"example1" | "example2">("example1");
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [lastInstruction, setLastInstruction] = useState<{ title: string; message: string } | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [hasShownFirstMove, setHasShownFirstMove] = useState(false);
+  const [hasShownFirstTurn, setHasShownFirstTurn] = useState(false);
+  const [showInstructionDialog, setShowInstructionDialog] = useState(false);
+  const [instructionContent, setInstructionContent] = useState<{ title: string; message: string } | null>(null);
+
+  // Show welcome dialog when component mounts (only for example1)
+  useEffect(() => {
+    if (currentExample === "example1") {
+      const welcomeMessage = {
+        title: "Welcome!",
+        message: "Let's learn how functions work! In this interactive tutorial, you'll:\n\n1. Move the robot step by step using control buttons\n2. Watch the code build as you take each action\n3. Use a function to repeat all moves with one click\n\nFunctions are powerful because they let you run multiple instructions together. Start by clicking 'Move Forward' to begin!"
+      };
+      setLastInstruction(welcomeMessage);
+      setInstructionContent(welcomeMessage);
+      setShowInstructionDialog(true);
+    }
+  }, [currentExample]);
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = "rgba(128, 128, 128, 0.2)";
@@ -1075,10 +1094,33 @@ export const FunctionDemo = () => {
     setCurrentPathIndex(newPathIndex);
     setActions(prev => [...prev, "forward"]);
     
+    // Show dialog after first move
+    if (!hasShownFirstMove) {
+      setHasShownFirstMove(true);
+      const instruction = {
+        title: "Great! First Move",
+        message: "Excellent! You moved the robot forward. Notice how `move_forward()` appeared in the code?\n\nEach action you take is being recorded. The code on the right shows all the moves you've made so far!"
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setInstructionContent(instruction);
+        setShowInstructionDialog(true);
+      }, 500);
+    }
+    
     // Check if we reached the end
     if (newPathIndex >= PATH.length - 1) {
       setTimeout(() => {
         setHasReachedEnd(true);
+        const instruction = {
+          title: "You Reached the End!",
+          message: `Excellent! You've reached the red dot. You took ${actions.length + 1} steps to get there.\n\nNow click the button "${functionName}()" to perform all the steps at once! This is how functions work - they group multiple instructions together so you can reuse them.`
+        };
+        setLastInstruction(instruction);
+        setTimeout(() => {
+          setInstructionContent(instruction);
+          setShowInstructionDialog(true);
+        }, 500);
       }, 1000);
     }
   };
@@ -1101,6 +1143,20 @@ export const FunctionDemo = () => {
     setTargetRobot(prev => ({ ...prev, direction: requiredDirection }));
     setIsAnimating(true);
     setActions(prev => [...prev, "turnLeft"]);
+    
+    // Show dialog after first turn
+    if (!hasShownFirstTurn) {
+      setHasShownFirstTurn(true);
+      const instruction = {
+        title: "Perfect! First Turn",
+        message: "Great! You turned the robot. See how `turn_left()` was added to the code?\n\nThe code is building as you move the robot. Each button click adds a new instruction to your sequence!"
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setInstructionContent(instruction);
+        setShowInstructionDialog(true);
+      }, 300);
+    }
     
     // For turns, animation completes immediately
     setTimeout(() => {
@@ -1176,6 +1232,11 @@ export const FunctionDemo = () => {
     setIsRunning(false);
     setCurrentLine(1);
     setIsAnimating(false);
+    
+    // Show celebration after function execution
+    setTimeout(() => {
+      setShowCelebration(true);
+    }, 500);
   };
 
   const handleReset = () => {
@@ -1189,6 +1250,11 @@ export const FunctionDemo = () => {
     setIsAnimating(false);
     setShowFunctionDefinition(false);
     setHasReachedEnd(false);
+    setHasShownFirstMove(false);
+    setHasShownFirstTurn(false);
+    setShowCelebration(false);
+    setLastInstruction(null);
+    setInstructionContent(null);
   };
 
   // Show Example 2 if selected
@@ -1295,9 +1361,16 @@ export const FunctionDemo = () => {
                   Robot Path
                 </h3>
                 <button
-                  onClick={() => setShowHelpDialog(true)}
+                  onClick={() => {
+                    if (lastInstruction) {
+                      setInstructionContent(lastInstruction);
+                      setShowInstructionDialog(true);
+                    } else {
+                      setShowHelpDialog(true);
+                    }
+                  }}
                   className="text-muted-foreground hover:text-foreground transition-colors"
-                  title="Show instructions"
+                  title="Show last instruction"
                 >
                   <HelpCircle className="h-4 w-4" />
                 </button>
@@ -1347,15 +1420,26 @@ export const FunctionDemo = () => {
               
               <div className="pt-4 border-t border-border">
                 {hasReachedEnd && !showFunctionDefinition && (
-                  <Button
-                    onClick={runFunction}
-                    disabled={isRunning || actions.length === 0 || isAnimating}
-                    className="w-full h-12 mb-2"
-                    size="lg"
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    {functionName}()
-                  </Button>
+                  <>
+                    <Button
+                      onClick={runFunction}
+                      disabled={isRunning || actions.length === 0 || isAnimating}
+                      className="w-full h-12 mb-2"
+                      size="lg"
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      {functionName}()
+                    </Button>
+                    {showCelebration && (
+                      <div className="mb-2 p-3 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-lg text-center">
+                        <div className="text-2xl mb-1">🎉</div>
+                        <h4 className="text-sm font-bold text-foreground mb-1">Amazing! Function Executed!</h4>
+                        <p className="text-xs text-muted-foreground">
+                          The function `{functionName}()` executed all {actions.length} moves automatically. Functions let you reuse code!
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
                 {showFunctionDefinition && (
                   <div className="mb-2 p-3 bg-accent/10 border border-accent/20 rounded-lg">
@@ -1407,6 +1491,23 @@ export const FunctionDemo = () => {
             />
           </div>
         </div>
+
+        {/* Instruction Dialog for Example 1 */}
+        {instructionContent && (
+          <AlertDialog open={showInstructionDialog} onOpenChange={setShowInstructionDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{instructionContent.title}</AlertDialogTitle>
+                <AlertDialogDescription className="whitespace-pre-line text-lg">
+                  {instructionContent.message}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setShowInstructionDialog(false)}>OK</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
 
         {/* Help Dialog */}
         <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
