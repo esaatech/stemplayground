@@ -161,7 +161,7 @@ const FunctionCodeDisplay = ({ currentLine, isRunning, actions, functionName, sh
       
       {/* Explanation text */}
       <div className="mt-4 pt-3 border-t border-muted-foreground/20 flex-shrink-0">
-        <p className="text-foreground/80 text-xs">
+        <p className="text-white/90 text-xs">
           {showFunctionDefinition && isRunning && currentLine === 1 && "Defining the function..."}
           {showFunctionDefinition && isRunning && currentLine > 1 && `Executing: ${getActionCode(lines[currentLine - 1]?.action || "forward")}`}
           {showFunctionDefinition && !isRunning && "Click the function button to see it execute all steps!"}
