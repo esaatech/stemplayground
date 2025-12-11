@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Info, Play, RotateCcw, Square, MoreVertical } from "lucide-react";
+import { Info, Play, RotateCcw, Square, MoreVertical, HelpCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -228,6 +228,22 @@ const Example2Component = () => {
   });
   const [outputLines, setOutputLines] = useState<string[]>([]);
   const [functionOutputLines, setFunctionOutputLines] = useState<string[]>([]);
+  const [hasShownPrintIntro, setHasShownPrintIntro] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [lastInstruction, setLastInstruction] = useState<{ title: string; message: string }>({
+    title: "Welcome!",
+    message: "Let's learn to create functions step by step! In this interactive tutorial, you'll:\n\n1. Create variables to store your names\n2. Use print statements to display them\n3. Create a function that groups everything together\n\nFunctions are powerful because they let you run multiple instructions with just one command. This makes your code reusable and easier to manage.\n\nStart by entering your first name in the code editor below!"
+  });
+
+  // Show welcome dialog when component mounts
+  useEffect(() => {
+    const welcomeMessage = {
+      title: "Welcome!",
+      message: "Let's learn to create functions step by step! In this interactive tutorial, you'll:\n\n1. Create variables to store your names\n2. Use print statements to display them\n3. Create a function that groups everything together\n\nFunctions are powerful because they let you run multiple instructions with just one command. This makes your code reusable and easier to manage.\n\nStart by entering your first name in the code editor below!"
+    };
+    setDialogContent(welcomeMessage);
+    setShowDialog(true);
+  }, []);
 
   const handleReset = () => {
     setFirstName("");
@@ -236,12 +252,19 @@ const Example2Component = () => {
     setCurrentStep("enterFirstName");
     setFunctionCode("");
     setFunctionName("");
-    setShowDialog(false);
-    setDialogContent(null);
     setNameError(null);
     setPrintedNames({ first: false, second: false, last: false });
     setOutputLines([]);
     setFunctionOutputLines([]);
+    setHasShownPrintIntro(false);
+    setShowCelebration(false);
+    const welcomeMessage = {
+      title: "Welcome!",
+      message: "Let's learn to create functions step by step! In this interactive tutorial, you'll:\n\n1. Create variables to store your names\n2. Use print statements to display them\n3. Create a function that groups everything together\n\nFunctions are powerful because they let you run multiple instructions with just one command. This makes your code reusable and easier to manage.\n\nStart by entering your first name in the code editor below!"
+    };
+    setLastInstruction(welcomeMessage);
+    setDialogContent(welcomeMessage);
+    setShowDialog(true);
   };
 
   const handleRunFunction = () => {
@@ -251,6 +274,8 @@ const Example2Component = () => {
       // Simulate function execution - print all three names
       setTimeout(() => {
         setFunctionOutputLines([firstName, secondName, lastName]);
+        // Show celebration message
+        setShowCelebration(true);
       }, 300);
     }
   };
@@ -259,6 +284,14 @@ const Example2Component = () => {
     if (value.trim()) {
       setFirstName(value.trim());
       setCurrentStep("enterSecondName");
+      // Show explanation dialog
+      setTimeout(() => {
+        setDialogContent({
+          title: "What is a Variable?",
+          message: `You just created a variable! Variables store information.\n\n\`name = "${value.trim()}"\` means the variable \`name\` now contains "${value.trim()}". Think of it like a labeled box where you store something!`
+        });
+        setShowDialog(true);
+      }, 300);
     }
   };
 
@@ -266,6 +299,16 @@ const Example2Component = () => {
     if (value.trim()) {
       setSecondName(value.trim());
       setCurrentStep("enterLastName");
+      // Show explanation dialog
+      const instruction = {
+        title: "Another Variable!",
+        message: `Great! You created another variable: \`second_name = "${value.trim()}"\`\n\nNow you have two variables storing different pieces of information. Each variable has its own name and value.`
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
     }
   };
 
@@ -273,6 +316,16 @@ const Example2Component = () => {
     if (value.trim()) {
       setLastName(value.trim());
       setCurrentStep("showPrints");
+      // Show explanation dialog and then show prints dialog
+      const instruction = {
+        title: "Three Variables Created!",
+        message: `Perfect! You now have three variables:\n• \`name\` = "${firstName}"\n• \`second_name\` = "${secondName}"\n• \`last_name\` = "${value.trim()}"\n\nVariables help us store and organize data. Now let's see how to display what's inside them!`
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
     }
   };
 
@@ -280,12 +333,42 @@ const Example2Component = () => {
     if (type === "first" && !printedNames.first) {
       setPrintedNames(prev => ({ ...prev, first: true }));
       setOutputLines(prev => [...prev, firstName]);
+      // Show explanation after first print
+      const instruction = {
+        title: "Great! First Print",
+        message: `Excellent! \`print(name)\` displayed "${firstName}" - the value stored in the \`name\` variable.\n\nThis is how we see what's inside variables. The output appears on the right side!`
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
     } else if (type === "second" && !printedNames.second) {
       setPrintedNames(prev => ({ ...prev, second: true }));
       setOutputLines(prev => [...prev, secondName]);
+      // Show explanation after second print
+      const instruction = {
+        title: "Second Print Complete!",
+        message: `Perfect! \`print(second_name)\` displayed "${secondName}".\n\nEach \`print()\` statement shows the value of a different variable. You're learning how to display data!`
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
     } else if (type === "last" && !printedNames.last) {
       setPrintedNames(prev => ({ ...prev, last: true }));
       setOutputLines(prev => [...prev, lastName]);
+      // Show explanation after last print
+      const instruction = {
+        title: "All Names Printed!",
+        message: `Wonderful! \`print(last_name)\` displayed "${lastName}".\n\nYou've successfully printed all three names, but you had to click three separate buttons. What if we could do this with just one command?`
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
     }
 
     // Check if all prints are done
@@ -294,14 +377,17 @@ const Example2Component = () => {
       [type]: true,
     };
     if (newState.first && newState.second && newState.last) {
+      // Wait a bit longer to show the final dialog after the last print explanation
       setTimeout(() => {
         setCurrentStep("promptFunction");
-        setDialogContent({
+        const instruction = {
           title: "Create a Function",
-          message: "Let's create a function to print all your names at once. Functions help us run multiple instructions together!"
-        });
+          message: "You printed each name separately by clicking three different buttons. What if we could print all three names with just one command?\n\nThat's what functions do! Functions group multiple instructions together so you can reuse them. Let's create a function to print all your names at once!"
+        };
+        setLastInstruction(instruction);
+        setDialogContent(instruction);
         setShowDialog(true);
-      }, 500);
+      }, 1500);
     }
   };
 
@@ -309,11 +395,25 @@ const Example2Component = () => {
     setShowDialog(false);
     if (currentStep === "promptFunction") {
       setCurrentStep("enterDef");
+      const instruction = {
+        title: "Step 1: Start with 'def'",
+        message: "Type 'def' followed by a space. This keyword tells Python you're creating a function."
+      };
+      setLastInstruction(instruction);
       setTimeout(() => {
-        setDialogContent({
-          title: "Step 1: Start with 'def'",
-          message: "Type 'def' followed by a space. This keyword tells Python you're creating a function."
-        });
+        setDialogContent(instruction);
+        setShowDialog(true);
+      }, 300);
+    } else if (currentStep === "showPrints" && !hasShownPrintIntro) {
+      // After closing the last name dialog, show the print statements explanation (only once)
+      setHasShownPrintIntro(true);
+      const instruction = {
+        title: "Print Statements",
+        message: "Now let's print each name one by one. Click on each `print()` statement to see the output.\n\n`print()` is a function that displays the value stored in a variable. It's like asking Python to show you what's inside the box!"
+      };
+      setLastInstruction(instruction);
+      setTimeout(() => {
+        setDialogContent(instruction);
         setShowDialog(true);
       }, 300);
     }
@@ -328,11 +428,13 @@ const Example2Component = () => {
       if (value.endsWith(" ") && value.trim() === "def") {
         setCurrentStep("enterFunctionName");
         setShowDialog(false);
+        const instruction = {
+          title: "Step 2: Give Your Function a Name",
+          message: "Function names must:\n• Start with a letter or underscore\n• Contain only letters, numbers, and underscores\n• Not be a Python keyword\n\nAfter typing your function name, add an opening parenthesis '(' and a closing parenthesis ')'"
+        };
+        setLastInstruction(instruction);
         setTimeout(() => {
-          setDialogContent({
-            title: "Step 2: Give Your Function a Name",
-            message: "Function names must:\n• Start with a letter or underscore\n• Contain only letters, numbers, and underscores\n• Not be a Python keyword\n\nAfter typing your function name, add an opening parenthesis '(' and a closing parenthesis ')'"
-          });
+          setDialogContent(instruction);
           setShowDialog(true);
         }, 300);
       }
@@ -372,11 +474,13 @@ const Example2Component = () => {
       if (value.includes(")") && value.includes("(")) {
         setCurrentStep("enterColon");
         setShowDialog(false);
+        const instruction = {
+          title: "Step 3: Add Colon",
+          message: "Finally, add a colon ':' after the closing parenthesis to complete `():`, then press Enter"
+        };
+        setLastInstruction(instruction);
         setTimeout(() => {
-          setDialogContent({
-            title: "Step 3: Add Colon",
-            message: "Finally, add a colon ':' after the closing parenthesis, then press Enter"
-          });
+          setDialogContent(instruction);
           setShowDialog(true);
         }, 300);
       }
@@ -394,11 +498,13 @@ const Example2Component = () => {
       setFunctionCode(indentedCode);
       setCurrentStep("indented");
       setShowDialog(false);
+      const instruction = {
+        title: "Indentation in Python",
+        message: "In Python, code inside a function must be indented (moved to the right). This tells Python that these lines belong to the function. We use 4 spaces for indentation.\n\nNow press the button with your function name to run it!"
+      };
+      setLastInstruction(instruction);
       setTimeout(() => {
-        setDialogContent({
-          title: "Indentation in Python",
-          message: "In Python, code inside a function must be indented (moved to the right). This tells Python that these lines belong to the function. We use 4 spaces for indentation.\n\nNow press the button with your function name to run it!"
-        });
+        setDialogContent(instruction);
         setShowDialog(true);
       }, 300);
     }
@@ -429,7 +535,19 @@ const Example2Component = () => {
             {/* Code Editor for name assignments */}
             {(currentStep === "enterFirstName" || currentStep === "enterSecondName" || currentStep === "enterLastName") && (
               <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Code Editor</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">Code Editor</h3>
+                  <button
+                    onClick={() => {
+                      setDialogContent(lastInstruction);
+                      setShowDialog(true);
+                    }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    title="Show last instruction"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </button>
+                </div>
                 <p className="text-sm text-muted-foreground mb-4">Enter your value, then press Enter</p>
                 <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm space-y-3">
                   <div className="flex items-center gap-2">
@@ -547,7 +665,19 @@ const Example2Component = () => {
               currentStep === "enterOpenParen" || currentStep === "enterCloseParen" || 
               currentStep === "enterColon" || currentStep === "indented" || currentStep === "complete") && (
               <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Code Editor</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">Code Editor</h3>
+                  <button
+                    onClick={() => {
+                      setDialogContent(lastInstruction);
+                      setShowDialog(true);
+                    }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    title="Show last instruction"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </button>
+                </div>
                 <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm">
                   <textarea
                     value={functionCode}
@@ -612,6 +742,15 @@ const Example2Component = () => {
                     <div key={idx} className="text-green-400">{line}</div>
                   ))}
                 </div>
+                {showCelebration && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-lg text-center">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <h4 className="text-lg font-bold text-foreground mb-1">Hurray! You've Created Your First Function!</h4>
+                    <p className="text-sm text-muted-foreground">
+                      You've successfully created a function that groups multiple instructions together. This is a powerful programming concept!
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -623,7 +762,7 @@ const Example2Component = () => {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>{dialogContent.title}</AlertDialogTitle>
-                <AlertDialogDescription className="whitespace-pre-line">
+                <AlertDialogDescription className="whitespace-pre-line text-lg">
                   {dialogContent.message}
                 </AlertDialogDescription>
               </AlertDialogHeader>
