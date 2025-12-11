@@ -18,6 +18,7 @@ import containerEmpty from "@/assets/containers/container-empty.png";
 import containerApple from "@/assets/containers/container-apple.png";
 import containerBall from "@/assets/containers/container-ball.png";
 import containerCar from "@/assets/containers/container-car.png";
+import containerNumber from "@/assets/containers/container-number.png";
 
 // Python variable name validation
 const isValidPythonVariableName = (name: string): { valid: boolean; error?: string } => {
@@ -191,7 +192,7 @@ const getContainerImage = (type: ObjectType | null): string => {
     case "apple": return containerApple;
     case "ball": return containerBall;
     case "car": return containerCar;
-    case "number": return containerEmpty; // For numbers, we'll show the empty container or could use a different visual
+    case "number": return containerNumber;
     default: return containerEmpty;
   }
 };
