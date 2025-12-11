@@ -72,6 +72,11 @@ const PythonPage = () => {
             description="Learn how variables work as containers that hold values."
             href="/programming/python/variables"
           />
+          <ConceptCard
+            title="functions"
+            description="See how functions group multiple instructions into reusable commands."
+            href="/programming/python/functions"
+          />
           {/* Future concepts can be added here */}
         </div>
       </div>

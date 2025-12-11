@@ -9,6 +9,7 @@ import PythonPage from "./pages/PythonPage";
 import WhileLoopPage from "./pages/WhileLoopPage";
 import ForLoopPage from "./pages/ForLoopPage";
 import VariablePage from "./pages/VariablePage";
+import FunctionPage from "./pages/FunctionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/programming/python/while-loop" element={<WhileLoopPage />} />
           <Route path="/programming/python/for-loop" element={<ForLoopPage />} />
           <Route path="/programming/python/variables" element={<VariablePage />} />
+          <Route path="/programming/python/functions" element={<FunctionPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
