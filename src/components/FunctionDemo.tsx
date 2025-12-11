@@ -28,7 +28,7 @@ import {
 } from "./ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
-const CANVAS_SIZE = 400;
+const CANVAS_SIZE = 320;
 const GRID_SIZE = 40;
 const ROBOT_SIZE = 30;
 const MOVE_SPEED = 1.5; // pixels per frame (slower for better visibility)
@@ -44,10 +44,10 @@ interface PathPoint {
 }
 
 const PATH: PathPoint[] = [
-  { x: GRID_SIZE * 2, y: GRID_SIZE * 8, allowedDirections: ["right"] }, // Start - can only go right
-  { x: GRID_SIZE * 6, y: GRID_SIZE * 8, allowedDirections: ["up"] }, // Junction 1 - must turn up
-  { x: GRID_SIZE * 6, y: GRID_SIZE * 6, allowedDirections: ["right"] }, // Junction 2 - must turn right
-  { x: GRID_SIZE * 8, y: GRID_SIZE * 6, allowedDirections: [] }, // End - no moves allowed
+  { x: GRID_SIZE * 1, y: GRID_SIZE * 2, allowedDirections: ["right"] }, // Start - can only go right
+  { x: GRID_SIZE * 5, y: GRID_SIZE * 2, allowedDirections: ["up"] }, // Junction 1 - must turn up
+  { x: GRID_SIZE * 5, y: GRID_SIZE * 4, allowedDirections: ["right"] }, // Junction 2 - must turn right
+  { x: GRID_SIZE * 7, y: GRID_SIZE * 4, allowedDirections: [] }, // End - no moves allowed
 ];
 
 // Helper function to get direction from one point to another
@@ -804,6 +804,7 @@ export const FunctionDemo = () => {
   const [showFunctionDefinition, setShowFunctionDefinition] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [currentExample, setCurrentExample] = useState<"example1" | "example2">("example1");
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = "rgba(128, 128, 128, 0.2)";
@@ -1288,10 +1289,19 @@ export const FunctionDemo = () => {
         <div className="grid md:grid-cols-2 gap-8 items-stretch">
           {/* Left side - Canvas and controls */}
           <div className="flex flex-col animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="bg-card border border-border rounded-xl p-6 flex-shrink-0">
-              <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
-                Robot Path
-              </h3>
+            <div className="bg-card border border-border rounded-xl p-3 flex-shrink-0">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <h3 className="text-base font-semibold text-foreground">
+                  Robot Path
+                </h3>
+                <button
+                  onClick={() => setShowHelpDialog(true)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  title="Show instructions"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </div>
               <div className="flex justify-center">
                 <canvas
                   ref={canvasRef}
@@ -1302,8 +1312,8 @@ export const FunctionDemo = () => {
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4 flex-1 flex flex-col">
-              <h3 className="text-lg font-semibold text-foreground text-center">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-3 flex-1 flex flex-col">
+              <h3 className="text-base font-semibold text-foreground text-center">
                 Control Buttons
               </h3>
               <div className="flex flex-col gap-3">
@@ -1398,34 +1408,40 @@ export const FunctionDemo = () => {
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-card border border-border rounded-xl p-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-          <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-            <span>📖</span> How it works
-          </h2>
-          <ul className="space-y-2 text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">1.</span>
-              <span>Click the control buttons to move the robot step by step</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">2.</span>
-              <span>Each action is added to your function sequence</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">3.</span>
-              <span>Watch the code update as you add actions</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">4.</span>
-              <span>Click <strong>Run Function</strong> to execute all actions automatically</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">5.</span>
-              <span>See how functions group multiple instructions into one reusable command!</span>
-            </li>
-          </ul>
-        </div>
+        {/* Help Dialog */}
+        <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl flex items-center gap-2">
+                <span>📖</span> How it works
+              </DialogTitle>
+              <DialogDescription className="text-lg">
+                <ul className="space-y-2 text-muted-foreground mt-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent">1.</span>
+                    <span>Click the control buttons to move the robot step by step</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent">2.</span>
+                    <span>Each action is added to your function sequence</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent">3.</span>
+                    <span>Watch the code update as you add actions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent">4.</span>
+                    <span>Click <strong>Run Function</strong> to execute all actions automatically</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent">5.</span>
+                    <span>See how functions group multiple instructions into one reusable command!</span>
+                  </li>
+                </ul>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
