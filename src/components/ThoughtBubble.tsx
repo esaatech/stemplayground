@@ -60,7 +60,7 @@ export const ThoughtBubble = ({ isVisible, checkResult, showNoFuelMessage }: Tho
               <span className="font-semibold">🚫 I cannot loop!</span>
               <br />
               <span className="text-muted-foreground">
-                The condition <code className="font-mono text-no-color">fuel == True</code> is <strong>False</strong>, so the while loop never starts.
+                The condition <code className="font-mono text-no-color">Fuel = False</code>, so the while loop never starts.
               </span>
             </p>
           </div>

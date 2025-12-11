@@ -49,7 +49,6 @@ export const WhileLoopDemo = () => {
           if (!hasFuel) {
             // Show the "can't loop" message
             setShowNoFuelMessage(true);
-            setCurrentLine(4);
           }
           
           resolve(hasFuel);
@@ -84,15 +83,17 @@ export const WhileLoopDemo = () => {
         // Loop complete
         setRotation(startRotationRef.current + 360);
         setLoopCount(prev => prev + 1);
-        setCurrentLine(3);
         
         // Small delay then check again
         setTimeout(async () => {
           const hasFuel = await performCheck();
           
           if (hasFuel && isRunningRef.current) {
-            setCurrentLine(2);
-            animateLoop();
+            setCurrentLine(1); // Go back to check while condition
+            setTimeout(() => {
+              setCurrentLine(2);
+              animateLoop();
+            }, 500);
           } else {
             setIsRunning(false);
           }
@@ -128,7 +129,6 @@ export const WhileLoopDemo = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-    setCurrentLine(4);
   };
 
   const handleReset = () => {
