@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Info, Play, RotateCcw, Square } from "lucide-react";
+import { Info, Play, RotateCcw, Square, MoreVertical } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -10,12 +10,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Input } from "./ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 const CANVAS_SIZE = 400;
 const GRID_SIZE = 40;
 const ROBOT_SIZE = 30;
-const MOVE_SPEED = 2; // pixels per frame
+const MOVE_SPEED = 1.5; // pixels per frame (slower for better visibility)
 
 type Direction = "up" | "down" | "left" | "right";
 type Action = "forward" | "turnLeft";
@@ -158,6 +174,470 @@ const FunctionCodeDisplay = ({ currentLine, isRunning, actions, functionName, sh
   );
 };
 
+// Python function name validation (same as variable name validation)
+const isValidPythonFunctionName = (name: string): { valid: boolean; error?: string } => {
+  if (!name || name.trim().length === 0) {
+    return { valid: false, error: "Function name cannot be empty" };
+  }
+  
+  if (/^\d/.test(name)) {
+    return { valid: false, error: "Function name cannot start with a number" };
+  }
+  
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+    return { valid: false, error: "Function name can only contain letters, numbers, and underscores" };
+  }
+  
+  const pythonKeywords = ['and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'False', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'None', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'True', 'try', 'while', 'with', 'yield'];
+  if (pythonKeywords.includes(name.toLowerCase())) {
+    return { valid: false, error: "This is a Python keyword and cannot be used as a function name" };
+  }
+  
+  return { valid: true };
+};
+
+type TutorialStep = 
+  | "enterFirstName" 
+  | "enterSecondName" 
+  | "enterLastName" 
+  | "showPrints" 
+  | "clickPrints" 
+  | "promptFunction" 
+  | "enterDef" 
+  | "enterFunctionName" 
+  | "enterOpenParen" 
+  | "enterCloseParen" 
+  | "enterColon" 
+  | "indented"
+  | "complete";
+
+const Example2Component = () => {
+  const [firstName, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [currentStep, setCurrentStep] = useState<TutorialStep>("enterFirstName");
+  const [functionCode, setFunctionCode] = useState("");
+  const [functionName, setFunctionName] = useState("");
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogContent, setDialogContent] = useState<{ title: string; message: string } | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [printedNames, setPrintedNames] = useState<{ first: boolean; second: boolean; last: boolean }>({
+    first: false,
+    second: false,
+    last: false,
+  });
+  const [outputLines, setOutputLines] = useState<string[]>([]);
+  const [functionOutputLines, setFunctionOutputLines] = useState<string[]>([]);
+
+  const handleReset = () => {
+    setFirstName("");
+    setSecondName("");
+    setLastName("");
+    setCurrentStep("enterFirstName");
+    setFunctionCode("");
+    setFunctionName("");
+    setShowDialog(false);
+    setDialogContent(null);
+    setNameError(null);
+    setPrintedNames({ first: false, second: false, last: false });
+    setOutputLines([]);
+    setFunctionOutputLines([]);
+  };
+
+  const handleRunFunction = () => {
+    if (functionName && firstName && secondName && lastName) {
+      // Clear previous output
+      setFunctionOutputLines([]);
+      // Simulate function execution - print all three names
+      setTimeout(() => {
+        setFunctionOutputLines([firstName, secondName, lastName]);
+      }, 300);
+    }
+  };
+
+  const handleFirstNameSubmit = (value: string) => {
+    if (value.trim()) {
+      setFirstName(value.trim());
+      setCurrentStep("enterSecondName");
+    }
+  };
+
+  const handleSecondNameSubmit = (value: string) => {
+    if (value.trim()) {
+      setSecondName(value.trim());
+      setCurrentStep("enterLastName");
+    }
+  };
+
+  const handleLastNameSubmit = (value: string) => {
+    if (value.trim()) {
+      setLastName(value.trim());
+      setCurrentStep("showPrints");
+    }
+  };
+
+  const handlePrintClick = (type: "first" | "second" | "last") => {
+    if (type === "first" && !printedNames.first) {
+      setPrintedNames(prev => ({ ...prev, first: true }));
+      setOutputLines(prev => [...prev, firstName]);
+    } else if (type === "second" && !printedNames.second) {
+      setPrintedNames(prev => ({ ...prev, second: true }));
+      setOutputLines(prev => [...prev, secondName]);
+    } else if (type === "last" && !printedNames.last) {
+      setPrintedNames(prev => ({ ...prev, last: true }));
+      setOutputLines(prev => [...prev, lastName]);
+    }
+
+    // Check if all prints are done
+    const newState = {
+      ...printedNames,
+      [type]: true,
+    };
+    if (newState.first && newState.second && newState.last) {
+      setTimeout(() => {
+        setCurrentStep("promptFunction");
+        setDialogContent({
+          title: "Create a Function",
+          message: "Let's create a function to print all your names at once. Functions help us run multiple instructions together!"
+        });
+        setShowDialog(true);
+      }, 500);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setShowDialog(false);
+    if (currentStep === "promptFunction") {
+      setCurrentStep("enterDef");
+      setTimeout(() => {
+        setDialogContent({
+          title: "Step 1: Start with 'def'",
+          message: "Type 'def' followed by a space. This keyword tells Python you're creating a function."
+        });
+        setShowDialog(true);
+      }, 300);
+    }
+  };
+
+  const handleCodeChange = (value: string) => {
+    setFunctionCode(value);
+    setNameError(null);
+    
+    if (currentStep === "enterDef") {
+      // Only trigger Step 2 after user types space after "def"
+      if (value.endsWith(" ") && value.trim() === "def") {
+        setCurrentStep("enterFunctionName");
+        setShowDialog(false);
+        setTimeout(() => {
+          setDialogContent({
+            title: "Step 2: Give Your Function a Name",
+            message: "Function names must:\n• Start with a letter or underscore\n• Contain only letters, numbers, and underscores\n• Not be a Python keyword\n\nAfter typing your function name, add an opening parenthesis '(' and a closing parenthesis ')'"
+          });
+          setShowDialog(true);
+        }, 300);
+      }
+    } else if (currentStep === "enterFunctionName") {
+      const match = value.match(/^def\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+      if (match) {
+        const name = match[1];
+        const validation = isValidPythonFunctionName(name);
+        if (validation.valid) {
+          setFunctionName(name);
+          setCurrentStep("enterOpenParen");
+          // Don't show dialog, user continues typing
+        } else {
+          setNameError(validation.error || "Invalid function name");
+        }
+      } else if (value.trim().length > 4 && !value.match(/^def\s+[a-zA-Z_]/)) {
+        setNameError("Function name must start with a letter or underscore");
+      }
+    } else if (currentStep === "enterOpenParen") {
+      // Continue to extract and update function name as user types
+      const match = value.match(/^def\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+      if (match) {
+        const name = match[1];
+        const validation = isValidPythonFunctionName(name);
+        if (validation.valid) {
+          setFunctionName(name);
+        }
+      }
+      
+      // Check if opening parenthesis has been added
+      if (value.includes("(")) {
+        setCurrentStep("enterCloseParen");
+        // Don't show dialog yet, wait for closing parenthesis
+      }
+    } else if (currentStep === "enterCloseParen") {
+      // Step 3 dialog should only show after entering closing parenthesis
+      if (value.includes(")") && value.includes("(")) {
+        setCurrentStep("enterColon");
+        setShowDialog(false);
+        setTimeout(() => {
+          setDialogContent({
+            title: "Step 3: Add Colon",
+            message: "Finally, add a colon ':' after the closing parenthesis, then press Enter"
+          });
+          setShowDialog(true);
+        }, 300);
+      }
+    } else if (currentStep === "enterColon") {
+      if (value.includes(":")) {
+        // Don't change step yet, wait for Enter key
+      }
+    }
+  };
+
+  const handleEnterAfterColon = () => {
+    if (currentStep === "enterColon" && functionCode.includes(":")) {
+      // Add newline and indentation, then add print statements
+      const indentedCode = functionCode + "\n    print(name)\n    print(second_name)\n    print(last_name)";
+      setFunctionCode(indentedCode);
+      setCurrentStep("indented");
+      setShowDialog(false);
+      setTimeout(() => {
+        setDialogContent({
+          title: "Indentation in Python",
+          message: "In Python, code inside a function must be indented (moved to the right). This tells Python that these lines belong to the function. We use 4 spaces for indentation.\n\nNow press the button with your function name to run it!"
+        });
+        setShowDialog(true);
+      }, 300);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <Link 
+          to="/programming/python" 
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
+          <span>←</span> Back to Python
+        </Link>
+
+        <header className="text-center space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            📝 Creating Functions: Full Name
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Learn to create functions step by step!
+          </p>
+        </header>
+
+        <div className="grid md:grid-cols-2 gap-8 items-stretch">
+          {/* Left side - Code Editor */}
+          <div className="space-y-6">
+            {/* Code Editor for name assignments */}
+            {(currentStep === "enterFirstName" || currentStep === "enterSecondName" || currentStep === "enterLastName") && (
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Code Editor</h3>
+                <p className="text-sm text-muted-foreground mb-4">Enter your value, then press Enter</p>
+                <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground/50">1</span>
+                    <span className="text-white">name = </span>
+                    {currentStep === "enterFirstName" ? (
+                      <Input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleFirstNameSubmit(e.currentTarget.value)}
+                        placeholder="Type your name"
+                        className="flex-1 bg-transparent border-b border-muted-foreground/30 rounded-none px-2 py-1 h-auto text-white font-mono placeholder:text-muted-foreground/50"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="text-green-400">"{firstName}"</span>
+                    )}
+                  </div>
+                  {currentStep !== "enterFirstName" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground/50">2</span>
+                      <span className="text-white">second_name = </span>
+                      {currentStep === "enterSecondName" ? (
+                        <Input
+                          value={secondName}
+                          onChange={(e) => setSecondName(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleSecondNameSubmit(e.currentTarget.value)}
+                          placeholder="Type your second name"
+                          className="flex-1 bg-transparent border-b border-muted-foreground/30 rounded-none px-2 py-1 h-auto text-white font-mono placeholder:text-muted-foreground/50"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="text-green-400">"{secondName}"</span>
+                      )}
+                    </div>
+                  )}
+                  {currentStep === "enterLastName" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground/50">3</span>
+                      <span className="text-white">last_name = </span>
+                      <Input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleLastNameSubmit(e.currentTarget.value)}
+                        placeholder="Type your last name"
+                        className="flex-1 bg-transparent border-b border-muted-foreground/30 rounded-none px-2 py-1 h-auto text-white font-mono placeholder:text-muted-foreground/50"
+                        autoFocus
+                      />
+                    </div>
+                  )}
+                  {currentStep !== "enterFirstName" && currentStep !== "enterSecondName" && currentStep !== "enterLastName" && lastName && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground/50">3</span>
+                      <span className="text-white">last_name = </span>
+                      <span className="text-green-400">"{lastName}"</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Print Statements - Interactive */}
+            {(currentStep === "showPrints" || currentStep === "clickPrints" || currentStep === "promptFunction") && (
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Print Statements</h3>
+                <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm space-y-3">
+                  <div className="text-muted-foreground mb-2">Code:</div>
+                  <div 
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer hover:bg-secondary/20 p-2 rounded transition-colors",
+                      printedNames.first && "opacity-60"
+                    )}
+                    onClick={() => !printedNames.first && handlePrintClick("first")}
+                  >
+                    <span className="text-muted-foreground/50">4</span>
+                    <span className="text-white">print(name)</span>
+                    {!printedNames.first && <span className="text-xs text-muted-foreground ml-auto">Click to print</span>}
+                  </div>
+                  <div 
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer hover:bg-secondary/20 p-2 rounded transition-colors",
+                      printedNames.second && "opacity-60"
+                    )}
+                    onClick={() => !printedNames.second && handlePrintClick("second")}
+                  >
+                    <span className="text-muted-foreground/50">5</span>
+                    <span className="text-white">print(second_name)</span>
+                    {!printedNames.second && <span className="text-xs text-muted-foreground ml-auto">Click to print</span>}
+                  </div>
+                  <div 
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer hover:bg-secondary/20 p-2 rounded transition-colors",
+                      printedNames.last && "opacity-60"
+                    )}
+                    onClick={() => !printedNames.last && handlePrintClick("last")}
+                  >
+                    <span className="text-muted-foreground/50">6</span>
+                    <span className="text-white">print(last_name)</span>
+                    {!printedNames.last && <span className="text-xs text-muted-foreground ml-auto">Click to print</span>}
+                  </div>
+                </div>
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  className="w-full mt-4"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset
+                </Button>
+              </div>
+            )}
+
+            {/* Function Editor */}
+            {(currentStep === "enterDef" || currentStep === "enterFunctionName" || 
+              currentStep === "enterOpenParen" || currentStep === "enterCloseParen" || 
+              currentStep === "enterColon" || currentStep === "indented" || currentStep === "complete") && (
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Code Editor</h3>
+                <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm">
+                  <textarea
+                    value={functionCode}
+                    onChange={(e) => handleCodeChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (currentStep === "enterColon" && e.key === "Enter" && functionCode.includes(":")) {
+                        e.preventDefault();
+                        handleEnterAfterColon();
+                      }
+                    }}
+                    placeholder="Type your function here..."
+                    className="w-full bg-transparent text-white resize-none outline-none min-h-[200px] placeholder:text-muted-foreground/50"
+                    autoFocus
+                  />
+                  {nameError && (
+                    <div className="text-destructive text-xs mt-2">{nameError}</div>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset
+                  </Button>
+                  {(currentStep === "indented" || currentStep === "complete") && functionName && (
+                    <Button
+                      onClick={handleRunFunction}
+                      className="flex-1"
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      {functionName}()
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right side - Output */}
+          <div className="space-y-6">
+            {/* Output Display for Print Statements */}
+            {(currentStep === "showPrints" || currentStep === "clickPrints" || currentStep === "promptFunction") && outputLines.length > 0 && (
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Output</h3>
+                <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm space-y-2">
+                  {outputLines.map((line, idx) => (
+                    <div key={idx} className="text-green-400">{line}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Output Display for Function Execution */}
+            {(currentStep === "indented" || currentStep === "complete") && functionOutputLines.length > 0 && (
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Output</h3>
+                <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm space-y-2">
+                  {functionOutputLines.map((line, idx) => (
+                    <div key={idx} className="text-green-400">{line}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Instruction Dialog */}
+        {dialogContent && (
+          <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{dialogContent.title}</AlertDialogTitle>
+                <AlertDialogDescription className="whitespace-pre-line">
+                  {dialogContent.message}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={handleDialogClose}>OK</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const FunctionDemo = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -181,8 +661,10 @@ export const FunctionDemo = () => {
   const [currentLine, setCurrentLine] = useState(1);
   const [functionName, setFunctionName] = useState("move_robot_to_end");
   const [isAnimating, setIsAnimating] = useState(false);
+  const [walkCycle, setWalkCycle] = useState(0); // Animation cycle for walking (0 to 2π)
   const [showFunctionDefinition, setShowFunctionDefinition] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [currentExample, setCurrentExample] = useState<"example1" | "example2">("example1");
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = "rgba(128, 128, 128, 0.2)";
@@ -227,36 +709,92 @@ export const FunctionDemo = () => {
     ctx.fill();
   };
 
-  const drawRobot = (ctx: CanvasRenderingContext2D, robotState: RobotState) => {
+  const drawRobot = (ctx: CanvasRenderingContext2D, robotState: RobotState, isWalking: boolean) => {
     const { x, y, direction } = robotState;
     
     ctx.save();
+    // Position robot exactly on the path line - path coordinates are at grid cell centers
+    // The robot's center should align with the path coordinate
     ctx.translate(x, y);
     
-    // Calculate rotation based on direction
+    // Calculate rotation based on direction - robot faces the direction it's moving
     let rotation = 0;
     switch (direction) {
-      case "right": rotation = 0; break;
-      case "down": rotation = Math.PI / 2; break;
-      case "left": rotation = Math.PI; break;
-      case "up": rotation = -Math.PI / 2; break;
+      case "right": rotation = 0; break; // Facing right
+      case "down": rotation = Math.PI / 2; break; // Facing down
+      case "left": rotation = Math.PI; break; // Facing left
+      case "up": rotation = -Math.PI / 2; break; // Facing up
     }
     ctx.rotate(rotation);
     
-    // Draw robot body (triangle pointing right by default)
+    // Body bob when walking (slower, more visible) - only vertical, not affecting horizontal alignment
+    const bodyBob = isWalking ? Math.sin(walkCycle * 2) * 1 : 0;
+    ctx.translate(0, bodyBob);
+    
+    // Draw robot body (rounded rectangle) - centered on path
     ctx.fillStyle = "#f59e0b";
+    const bodyWidth = ROBOT_SIZE * 0.5;
+    const bodyHeight = ROBOT_SIZE * 0.5;
+    const bodyX = -bodyWidth / 2;
+    const bodyY = -bodyHeight / 2;
+    const radius = 4;
+    
     ctx.beginPath();
-    ctx.moveTo(ROBOT_SIZE / 2, 0);
-    ctx.lineTo(-ROBOT_SIZE / 2, -ROBOT_SIZE / 2);
-    ctx.lineTo(-ROBOT_SIZE / 2, ROBOT_SIZE / 2);
+    ctx.moveTo(bodyX + radius, bodyY);
+    ctx.lineTo(bodyX + bodyWidth - radius, bodyY);
+    ctx.quadraticCurveTo(bodyX + bodyWidth, bodyY, bodyX + bodyWidth, bodyY + radius);
+    ctx.lineTo(bodyX + bodyWidth, bodyY + bodyHeight - radius);
+    ctx.quadraticCurveTo(bodyX + bodyWidth, bodyY + bodyHeight, bodyX + bodyWidth - radius, bodyY + bodyHeight);
+    ctx.lineTo(bodyX + radius, bodyY + bodyHeight);
+    ctx.quadraticCurveTo(bodyX, bodyY + bodyHeight, bodyX, bodyY + bodyHeight - radius);
+    ctx.lineTo(bodyX, bodyY + radius);
+    ctx.quadraticCurveTo(bodyX, bodyY, bodyX + radius, bodyY);
     ctx.closePath();
     ctx.fill();
     
-    // Draw robot face
+    // Draw robot face (eyes) - positioned at the front of the robot
     ctx.fillStyle = "#1f2937";
+    const eyeY = -bodyHeight / 4;
     ctx.beginPath();
-    ctx.arc(ROBOT_SIZE / 4, 0, 6, 0, Math.PI * 2);
+    ctx.arc(-bodyWidth / 6, eyeY, 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.beginPath();
+    ctx.arc(bodyWidth / 6, eyeY, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw legs (animated when walking) - positioned at bottom of body
+    // Legs extend downward from body center, so robot center stays on path
+    const legLength = ROBOT_SIZE / 4;
+    const legWidth = 4;
+    const legSpread = bodyWidth / 2.5;
+    const legY = bodyHeight / 2;
+    
+    if (isWalking) {
+      // Animate legs swinging - slower, more pronounced movement
+      const leftLegAngle = Math.sin(walkCycle * 2) * 0.6; // -0.6 to 0.6 radians (more pronounced)
+      const rightLegAngle = -Math.sin(walkCycle * 2) * 0.6; // Opposite phase
+      
+      // Left leg
+      ctx.save();
+      ctx.translate(-legSpread / 2, legY);
+      ctx.rotate(leftLegAngle);
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(-legWidth / 2, 0, legWidth, legLength);
+      ctx.restore();
+      
+      // Right leg
+      ctx.save();
+      ctx.translate(legSpread / 2, legY);
+      ctx.rotate(rightLegAngle);
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(-legWidth / 2, 0, legWidth, legLength);
+      ctx.restore();
+    } else {
+      // Static legs when not walking
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(-legSpread / 2 - legWidth / 2, legY, legWidth, legLength);
+      ctx.fillRect(legSpread / 2 - legWidth / 2, legY, legWidth, legLength);
+    }
     
     ctx.restore();
   };
@@ -276,8 +814,13 @@ export const FunctionDemo = () => {
     // Draw path
     drawPath(ctx);
     
-    // Draw robot
-    drawRobot(ctx, robot);
+    // Update walking animation cycle when moving (slower for visibility)
+    if (isAnimating) {
+      setWalkCycle(prev => (prev + 0.15) % (Math.PI * 2));
+    }
+    
+    // Draw robot (pass isAnimating to show walking animation)
+    drawRobot(ctx, robot, isAnimating);
     
     // Smooth movement animation
     if (isAnimating) {
@@ -288,14 +831,20 @@ export const FunctionDemo = () => {
         // Reached target
         setRobot(targetRobot);
         setIsAnimating(false);
+        setWalkCycle(0); // Reset walk cycle when stopped
       } else {
-        // Move towards target
-        setRobot(prev => ({
-          ...prev,
-          x: prev.x + Math.sign(dx) * Math.min(MOVE_SPEED, Math.abs(dx)),
-          y: prev.y + Math.sign(dy) * Math.min(MOVE_SPEED, Math.abs(dy)),
-          direction: targetRobot.direction, // Update direction immediately for turns
-        }));
+        // Move towards target - keep the direction from targetRobot (set when turning or moving)
+        setRobot(prev => {
+          const newX = prev.x + Math.sign(dx) * Math.min(MOVE_SPEED, Math.abs(dx));
+          const newY = prev.y + Math.sign(dy) * Math.min(MOVE_SPEED, Math.abs(dy));
+          
+          return {
+            ...prev,
+            x: newX,
+            y: newY,
+            direction: targetRobot.direction, // Use the direction from targetRobot (set when action was initiated)
+          };
+        });
       }
     }
     
@@ -407,14 +956,14 @@ export const FunctionDemo = () => {
     const nextPoint = PATH[currentIndex + 1];
     const requiredDirection = getDirectionToNextPoint(currentPoint, nextPoint);
     
-    // Turn to face the required direction
-    setTargetRobot({ ...robot, direction: requiredDirection });
+    // Turn to face the required direction immediately
+    setRobot(prev => ({ ...prev, direction: requiredDirection }));
+    setTargetRobot(prev => ({ ...prev, direction: requiredDirection }));
     setIsAnimating(true);
     setActions(prev => [...prev, "turnLeft"]);
     
     // For turns, animation completes immediately
     setTimeout(() => {
-      setRobot(prev => ({ ...prev, direction: requiredDirection }));
       setIsAnimating(false);
     }, 300);
   };
@@ -502,6 +1051,11 @@ export const FunctionDemo = () => {
     setHasReachedEnd(false);
   };
 
+  // Show Example 2 if selected
+  if (currentExample === "example2") {
+    return <Example2Component />;
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -515,7 +1069,23 @@ export const FunctionDemo = () => {
 
         {/* Header */}
         <header className="text-center space-y-2 animate-fade-in relative">
-          <div className="absolute top-0 right-0 md:right-4">
+          <div className="absolute top-0 right-0 md:right-4 flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <MoreVertical className="h-5 w-5" />
+                  <span className="sr-only">Examples menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setCurrentExample("example1")}>
+                  Example 1: Robot Path
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCurrentExample("example2")}>
+                  Example 2: Full Name Function
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full">
@@ -529,7 +1099,7 @@ export const FunctionDemo = () => {
                     <span>📚</span> Understanding Functions
                   </DialogTitle>
                   <DialogDescription className="text-base pt-2">
-                    Learn how functions group multiple instructions together
+                    Functions help us run multiple instructions together
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
@@ -571,7 +1141,7 @@ export const FunctionDemo = () => {
             🤖 Functions
           </h1>
           <p className="text-muted-foreground text-lg">
-            Learn how functions group multiple instructions together!
+            Functions help us run multiple instructions together
           </p>
         </header>
 
