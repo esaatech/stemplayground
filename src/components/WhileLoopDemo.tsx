@@ -1,8 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Info } from "lucide-react";
 import { Track } from "./Track";
 import { FuelToggle } from "./FuelToggle";
 import { ControlPanel } from "./ControlPanel";
 import { CodeDisplay } from "./CodeDisplay";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 
 const LOOP_DURATION = 3000; // 3 seconds per loop
 
@@ -158,7 +168,105 @@ export const WhileLoopDemo = () => {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <header className="text-center space-y-2 animate-fade-in">
+        <header className="text-center space-y-2 animate-fade-in relative">
+          <div className="absolute top-0 right-0 md:right-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <Info className="h-5 w-5" />
+                  <span className="sr-only">Learn about while loops</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl flex items-center gap-2">
+                    <span>📚</span> Understanding While Loops
+                  </DialogTitle>
+                  <DialogDescription className="text-base pt-2">
+                    Learn how the <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">while</code> loop works step by step
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground">What is a While Loop?</h3>
+                    <p className="text-muted-foreground">
+                      A <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">while</code> loop is a control structure that repeats a block of code <strong>as long as a condition is True</strong>. It automatically checks the condition before each iteration.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground">The Code Structure</h3>
+                    <div className="bg-foreground/95 rounded-lg p-4 font-mono text-sm border border-border">
+                      <div className="space-y-1">
+                        <div><span className="text-muted-foreground/50">1</span> <span className="text-secondary">while</span> <span className="text-foreground">Fuel:</span></div>
+                        <div className="pl-6"><span className="text-muted-foreground/50">2</span> <span className="text-foreground">move_train_one_loop()</span></div>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      The condition <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel</code> is checked automatically by the while loop. If <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = True</code>, the loop continues. If <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = False</code>, the loop stops.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground">How It Works</h3>
+                    <ol className="space-y-3 text-muted-foreground">
+                      <li className="flex gap-3">
+                        <span className="text-accent font-bold flex-shrink-0">1.</span>
+                        <div>
+                          <strong className="text-foreground">Check Condition:</strong> The while loop first checks if <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel</code> is <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">True</code> or <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">False</code>.
+                        </div>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="text-accent font-bold flex-shrink-0">2.</span>
+                        <div>
+                          <strong className="text-foreground">If True:</strong> The code inside the loop runs (<code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">move_train_one_loop()</code>). After completing, the loop automatically goes back to step 1 to check the condition again.
+                        </div>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="text-accent font-bold flex-shrink-0">3.</span>
+                        <div>
+                          <strong className="text-foreground">If False:</strong> The loop stops immediately. The code inside the loop never runs, and execution continues after the while block.
+                        </div>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="text-accent font-bold flex-shrink-0">4.</span>
+                        <div>
+                          <strong className="text-foreground">Repeat:</strong> This process continues until the condition becomes <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">False</code>.
+                        </div>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <span>💡</span> Key Point
+                    </h4>
+                    <p className="text-muted-foreground text-sm">
+                      The condition is checked <strong>before every iteration</strong>, not just once. This means even if <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel</code> becomes <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">False</code> during the loop, the next check will catch it and stop the loop.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground">Try It Out!</h3>
+                    <ul className="space-y-2 text-muted-foreground text-sm">
+                      <li className="flex gap-2">
+                        <span className="text-accent">•</span>
+                        <span>Set <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = True</code> and click Run to see the train loop continuously</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-accent">•</span>
+                        <span>Set <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">Fuel = False</code> and click Run to see the loop never start</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-accent">•</span>
+                        <span>Watch how the code highlights each line as the loop executes</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground">
             🚂 While Loop Train
           </h1>
