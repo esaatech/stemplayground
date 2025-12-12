@@ -210,14 +210,6 @@ const Home = () => {
           `}
         />
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border mt-16 py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="font-mono">STEM Playground © 2024</p>
-          <p className="text-sm mt-2">Interactive learning through visualization</p>
-        </div>
-      </footer>
     </div>
   );
 };

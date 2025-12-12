@@ -1326,7 +1326,7 @@ export const FunctionDemo = () => {
                         <div className="pl-6"><span className="text-muted-foreground/50">4</span> <span className="text-white">    move_forward()</span></div>
                       </div>
                     </div>
-                    <p className="text-white text-sm">
+                    <p className="text-foreground text-sm">
                       The <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">def</code> keyword defines a function. The code inside runs when you call the function. Instead of clicking buttons multiple times, you can call <code className="font-mono text-secondary bg-muted px-1.5 py-0.5 rounded">move_robot()</code> to execute all the steps at once!
                     </p>
                   </div>
