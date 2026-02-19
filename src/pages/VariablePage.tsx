@@ -6,3 +6,5 @@ const VariablePage = () => {
 
 export default VariablePage;
 
+
+

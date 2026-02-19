@@ -121,3 +121,10 @@ Since you're using a static site (React app deployed to Firebase Hosting), here 
 
 Would you like me to implement the Firestore solution with an admin interface?
 
+
+
+
+
+
+
+

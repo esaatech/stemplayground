@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Code2, ChevronRight, FileCode } from "lucide-react";
+import { FlaskConical, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const LanguageCard = ({ 
+const LabCard = ({ 
   name, 
   description, 
   href, 
@@ -38,7 +38,7 @@ const LanguageCard = ({
   );
 };
 
-const ProgrammingPage = () => {
+const SciencePage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -49,12 +49,12 @@ const ProgrammingPage = () => {
           </Link>
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 rounded-xl bg-cyan-500/20">
-              <Code2 className="h-8 w-8 text-cyan-400" />
+              <FlaskConical className="h-8 w-8 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white">Programming</h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-white">Science</h1>
               <p className="text-slate-300 text-lg mt-2">
-                Learn programming concepts through interactive visualizations
+                Explore scientific concepts through interactive experiments and labs
               </p>
             </div>
           </div>
@@ -64,23 +64,18 @@ const ProgrammingPage = () => {
       {/* Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <LanguageCard
-            name="Python"
-            description="Visualize loops, functions, and data structures with interactive Python examples."
-            href="/programming/python"
-            icon={Code2}
+          <LabCard
+            name="How Plants Grow"
+            description="Plant a seed, water it, give it sunlight, and watch it grow! Learn about plant life cycles through hands-on actions."
+            href="/science/plant-growth"
+            icon={FlaskConical}
           />
-          <LanguageCard
-            name="HTML / CSS / JS"
-            description="Build and style web pages with HTML, CSS, and JavaScript through hands-on examples."
-            href="/programming/html-css-js"
-            icon={FileCode}
-          />
+          {/* Future labs can be added here */}
         </div>
       </div>
     </div>
   );
 };
 
-export default ProgrammingPage;
+export default SciencePage;
 
