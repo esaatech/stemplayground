@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ElectricityMaterial as Material } from "@/content/electricityMaterialScience";
 import { MaterialScienceMoreDialog } from "@/components/MaterialScienceMoreDialog";
+import { ElectricityLabTabs } from "@/components/ElectricityLabTabs";
 
 type EnergyMode = "button" | "handle";
 
@@ -443,6 +444,8 @@ export function ElectricityFlowDemo() {
         >
           <span>←</span> Back to Electricity
         </Link>
+
+        <ElectricityLabTabs />
 
         <header className="text-center space-y-2 relative animate-fade-in">
           <div className="absolute top-0 right-0 md:right-2">

@@ -19,6 +19,7 @@ import PlantGrowthPage from "./pages/PlantGrowthPage";
 import EngineeringPage from "./pages/EngineeringPage";
 import ElectricityTopicPage from "./pages/ElectricityTopicPage";
 import ElectricityLabPage from "./pages/ElectricityLabPage";
+import ElectricityContinuityPage from "./pages/ElectricityContinuityPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/engineering" element={<EngineeringPage />} />
             <Route path="/engineering/electricity" element={<ElectricityTopicPage />} />
             <Route path="/engineering/electricity/lab" element={<ElectricityLabPage />} />
+            <Route path="/engineering/electricity/continuity" element={<ElectricityContinuityPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
