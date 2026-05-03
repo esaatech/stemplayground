@@ -16,6 +16,9 @@ import VariablePage from "./pages/VariablePage";
 import FunctionPage from "./pages/FunctionPage";
 import SciencePage from "./pages/SciencePage";
 import PlantGrowthPage from "./pages/PlantGrowthPage";
+import EngineeringPage from "./pages/EngineeringPage";
+import ElectricityTopicPage from "./pages/ElectricityTopicPage";
+import ElectricityLabPage from "./pages/ElectricityLabPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +43,9 @@ const App = () => (
             <Route path="/programming/python/functions" element={<FunctionPage />} />
             <Route path="/science" element={<SciencePage />} />
             <Route path="/science/plant-growth" element={<PlantGrowthPage />} />
+            <Route path="/engineering" element={<EngineeringPage />} />
+            <Route path="/engineering/electricity" element={<ElectricityTopicPage />} />
+            <Route path="/engineering/electricity/lab" element={<ElectricityLabPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>

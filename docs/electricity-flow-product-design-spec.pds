@@ -1,0 +1,175 @@
+# Electricity Flow Simulator — Product Design Spec (PDS)
+
+**Product name:** Electricity Flow Simulator (Interactive Learning Lab)  
+**Category:** Engineering → Electricity  
+**Status:** Design approved for implementation  
+**Last updated:** 2026-05-03
+
+---
+
+## 1. Purpose and scope
+
+**Goal:** Add an **Engineering** learning path that matches the **Programming** navigation model, with a first topic **Electricity** that opens an **Electricity Flow Simulator** lab. The lab implements the PRD: electron visualization, energy input (button + handle), bulb output, optional current meter, material selector, and clear flow arrows—**simple UI, browser-only, smooth on modest hardware**.
+
+**Out of scope (v1):** Backend, accounts, saving progress, multi-lesson quizzes (can follow later).
+
+---
+
+## 2. Alignment with the current product (STEM Playground)
+
+| Pattern today | How Electricity uses it |
+|---------------|-------------------------|
+| `ProgrammingPage`: dark gradient header, “Back to Home”, grid of `Card` links | **`EngineeringPage`:** same shell; accent follows Home’s **amber / orange** engineering palette while reusing layout primitives (`Card`, `Button`, typography). |
+| `PythonPage`: “Back to Programming”, grid of concept cards | **Engineering topics page:** “Back to Engineering”, grid with **Electricity** card linking to the lab route. |
+| Topic demo pages (e.g. `WhileLoopPage` → `WhileLoopDemo`): full-page demo, back link to parent list | **`ElectricityLabPage` → `ElectricityFlowDemo`:** full-page lab; back link to **Engineering** topics. |
+| Topic demos: `Info` dialog, constrained content width, muted back link | Reuse: **help / “What is current?”** in a `Dialog`; same spacing and back-link pattern. |
+
+**Note:** Home links to `/engineering`; routing must include **Engineering** alongside Programming and Science.
+
+---
+
+## 3. Information architecture and routes
+
+| Route | Page role |
+|-------|-----------|
+| `/engineering` | Landing: list of engineering **topics** (mirrors `ProgrammingPage` / `SciencePage`). |
+| `/engineering/electricity` | Topic hub: short blurb + CTA **Open lab** (or grid if more topics are added later). |
+| `/engineering/electricity/lab` | Full **Electricity Flow Simulator** (interactive PRD experience). |
+
+**Alternative:** Collapse topic + lab to `/engineering/electricity` only (fewer clicks). Prefer three-level path to mirror **Programming → Python → while-loop**.
+
+**Breadcrumb mental model:** Home → Engineering → Electricity → Lab.
+
+---
+
+## 4. User flows
+
+### 4.1 Category flow (match Programming)
+
+1. User opens **Engineering** from Home.  
+2. Sees cards (initially **Electricity** only).  
+3. Clicks **Electricity** → topic page or lab.  
+4. Clicks **Try it** / **Open lab** → simulator.
+
+### 4.2 Lab flow (PRD + staged “steps”)
+
+PRD **Mode 1 (Button)** and **Mode 2 (Handle)** are the two **primary interaction steps**. Both must be visible and teachable:
+
+1. **Land:** Electrons **jitter randomly** (no net flow); bulb **off** (or minimal glow); short hint: electrons are present—add energy to push them.  
+2. **Step A — Push (basic):** **Press & hold** → **directional flow** + **flow arrows**; bulb **brightens** with current. Release → return toward random motion; bulb dims.  
+3. **Step B — Dial strength (advanced):** **Energy mode** → **Handle** → **circular drag** maps to **push strength** → electron **speed** and bulb **brightness** track strength.  
+4. **Explore:** **Material** (Copper / Wood / Plastic) with **same push** → different effective speed / brightness (and optional meter).  
+5. **Optional:** **Current meter** toggle connects feeling to a number.
+
+Optional **stepper** (“1 Random → 2 Button → 3 Handle → 4 Materials”) reinforces pedagogy without blocking free play.
+
+---
+
+## 5. Lab UI layout (single screen, low clutter)
+
+### 5.1 Desktop regions
+
+- **Top:** Title “Electricity Flow Simulator”, one-line subtitle; **Back to Engineering** (same pattern as programming demos).  
+- **Controls strip:** Compact.  
+  - **Energy mode:** **Button** | **Handle** (tabs or segmented control).  
+  - **Button mode:** large **Push** (press/hold; touch-friendly).  
+  - **Handle mode:** circular **knob** — strength via orbit; label “Strength”.  
+  - **Material:** `Select` or three chips: Copper, Wood, Plastic.  
+  - **Toggle:** Show current meter.  
+- **Center:** **Simulation canvas** — conduit, **electron dots**, **direction arrows** when push > 0.  
+- **Bulb / meter:** Large bulb; numeric **current** when meter is on.
+
+### 5.2 Mobile
+
+- Stack: canvas (full width), controls, bulb/meter.  
+- Button and handle work with **touch** (no hover-only behavior).
+
+### 5.3 Visual consistency
+
+- **shadcn:** `Button`, `Card`, `Dialog`, `Select` / `ToggleGroup`.  
+- **Engineering accent:** amber/orange (from Home Engineering card); standard `foreground` / `muted-foreground` for text.  
+- Avoid extra chrome or competing palettes.
+
+---
+
+## 6. Simulation behavior (design-level)
+
+### 6.1 Electrons
+
+- **N** particles (capped for performance, e.g. 80–150) in a bounded **conduit**.  
+- **Idle:** small random motion, **zero net drift**.  
+- **Push > 0:** biased velocity along flow axis; scales with push × **material conductivity**.  
+- **Rendering:** `requestAnimationFrame`; simple circles; minimal expensive filters.
+
+### 6.2 Energy model (UX-facing)
+
+- **Push** ∈ [0, 1] from Button (0 off, 1 while held) or Handle (continuous).  
+- **Conductivity:** Copper (high), Wood (low), Plastic (~0; optional tiny motion with explanatory copy).  
+- **Current:** monotonic `push × conductivity × baseline` (clamped). Bulb uses opacity/glow lightly for performance.
+
+### 6.3 Outputs
+
+- **Bulb:** brightness ∝ current.  
+- **Meter:** numeric display; update throttled if needed (e.g. ~10 Hz).
+
+### 6.4 Flow arrows
+
+- When push > small threshold, show **1–3 arrows** along conduit; intensity scales with push.
+
+---
+
+## 7. Content and help copy (ages 10–18)
+
+- **Info dialog:** Electrons exist in the material; **current** = organized motion; **push (energy)** drives motion; **material** changes ease of flow.  
+- **Material labels:** Copper — easy flow; Wood — harder; Plastic — insulator (almost no flow).
+
+---
+
+## 8. Accessibility
+
+- **Keyboard:** Space hold for push, or **toggle** “push on” for users who cannot hold.  
+- **Focus:** All controls focusable; visible focus rings.  
+- **Motion:** `prefers-reduced-motion` — reduce jitter or simplify motion.  
+- **Bulb state:** Not color-only (brightness/size change).
+
+---
+
+## 9. PRD traceability
+
+| PRD item | Design response |
+|----------|-----------------|
+| Electron visualization | Dots, random vs directional motion |
+| Energy (voltage/push) | Button + Handle modes |
+| Conductors vs insulators | Material selector + conductivity |
+| Bulb ∝ current | Brightness mapping |
+| Optional meter | Toggle + numeric current |
+| Arrows, smooth animation | Arrows when pushing; rAF loop |
+| Browser, simple UI, performance | Canvas/SVG, particle cap, light effects |
+
+---
+
+## 10. Implementation sketch (reference)
+
+- `EngineeringPage.tsx`, electricity topic page, `ElectricityLabPage.tsx` — thin route wrappers.  
+- `ElectricityFlowDemo.tsx` — main UI + canvas; optional `useElectricitySimulation` hook.  
+- Prefer **`<canvas>`** or single SVG for electrons.
+
+---
+
+## 11. Success criteria
+
+- Learner completes **Button → Handle → Materials** with minimal extra copy.  
+- Bulb and meter (if on) **agree** with push and material.  
+- **Engineering** feels like **Programming:** same hierarchy, cards, demo page pattern.
+
+---
+
+## 12. Original PRD — objectives and outcomes (reference)
+
+**Objective:** Interactive simulation for current as electron motion, role of energy (push/voltage), and materials (conductors vs insulators).
+
+**Target users:** Students 10–18; beginners in electronics / physical computing.
+
+**Learning outcomes:** Electrons exist in materials; current = directional motion; energy causes movement; materials control ease of flow.
+
+**Constraints:** Browser-only; smooth on low-end devices; simple, uncluttered UI.
