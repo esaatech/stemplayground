@@ -49,6 +49,13 @@ function materialConductiveForContinuity(m: ContinuityWireMaterial) {
   return m === "copper";
 }
 
+/** LCD when continuity fails: true open/gap vs high resistance through an insulator. */
+function continuityFailDisplay(samplePathComplete: boolean, m: ContinuityWireMaterial): string {
+  if (!samplePathComplete) return "OPEN";
+  if (m === "wood" || m === "plastic") return "HI Ω";
+  return "OPEN";
+}
+
 type ContinuityToneNodes = {
   ctx: AudioContext;
   osc: OscillatorNode;
@@ -362,7 +369,7 @@ export function ContinuityTestDemo() {
 
     if (!sampleBridging || !sampleSpanOk) {
       setLed("red");
-      setDisplay("OPEN");
+      setDisplay(!sampleSpanOk ? "MOVE ENDS" : "ALIGN");
       setReadingLatched(true);
       return;
     }
@@ -406,7 +413,7 @@ export function ContinuityTestDemo() {
         window.setTimeout(() => setPulse(false), 700);
       } else {
         setLed("red");
-        setDisplay("OPEN");
+        setDisplay(continuityFailDisplay(closed, wireMaterial));
       }
       setReadingLatched(true);
       setIsTesting(false);
@@ -492,14 +499,20 @@ export function ContinuityTestDemo() {
                     <strong className="text-foreground">metal tip</strong> (either end can go to either probe), then{" "}
                     <strong className="text-foreground">Test</strong>.
                   </li>
+                  <li>
+                    After <strong className="text-foreground">Test</strong>, <strong className="text-foreground">OPEN</strong> means a{" "}
+                    <strong className="text-foreground">gap</strong> in the sample path; <strong className="text-foreground">HI Ω</strong> means the path is
+                    complete but the material is too insulating for electrons to flow like they do in copper.
+                  </li>
                 </ul>
               </DialogContent>
             </Dialog>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Continuity test</h1>
           <p className="text-muted-foreground text-base max-w-2xl mx-auto">
-            Virtual meter in continuity mode: complete path + conductor → steady tone and green. Anything else → red,
-            silence.
+            Virtual meter in continuity mode: complete path + conductor → steady tone and green. A gap in the path
+            reads <strong className="text-foreground">OPEN</strong>; wood or plastic with a complete path reads{" "}
+            <strong className="text-foreground">HI Ω</strong> (too resistive—not the same as “open wire”).
           </p>
         </header>
 
@@ -660,8 +673,10 @@ export function ContinuityTestDemo() {
                   steady continuity tone—simplified for class discussion.
                 </p>
                 <p>
-                  A <strong className="text-foreground">broken path</strong> (gap) in the sample breaks the bridge between
-                  the two probe tips, so no continuity even with copper leads.
+                  A <strong className="text-foreground">broken path</strong> (gap) in the sample is an open circuit
+                  between the tips (<strong className="text-foreground">OPEN</strong> on the display). With the path
+                  complete, wood or plastic still blocks electron flow; the display shows{" "}
+                  <strong className="text-foreground">HI Ω</strong> (high resistance), not OPEN.
                 </p>
               </div>
             )}
@@ -714,7 +729,9 @@ export function ContinuityTestDemo() {
                 aria-label={led === "green" ? "Continuity detected" : led === "red" ? "No continuity" : "Idle"}
               />
             </div>
-            <p className="mt-3 text-center text-[10px] text-zinc-500">Continuity mode — steady tone on low resistance</p>
+            <p className="mt-3 text-center text-[10px] text-zinc-500">
+              OPEN = gap in path · HI Ω = insulator · CLOSED + tone = copper path
+            </p>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ Original PDS goals: virtual multimeter in continuity mode, probes, material path
 | Place sample | No separate “connect” control: choosing a material **is** placing the sample. |
 | Test | **~550 ms** minimum between runs; **~420 ms** simulated measurement delay; **Web Audio** sustained sine tone (1 kHz) while a **copper + closed path** reading is latched |
 | Break / complete path | **Switch**: toggles **in-sample gap** only (open path through the bar). Does not model probe attachment. |
-| Feedback | Green + **continuous tone** when **path complete (!pathBroken) + copper** (tone stops when the latched reading is cleared or invalidated); red otherwise |
+| Feedback | Green + **continuous tone** when **path complete (!pathBroken) + copper** (tone stops when the latched reading is cleared or invalidated); red otherwise. LCD distinguishes **OPEN** (true open path / gap in sample) from **HI Ω** (path geometrically complete through wood or plastic—insulating, not “open wire”). |
 | Teaching | Short inline “Why?” copy; info dialog on the page |
 | Tabs | **Flow simulator** ↔ **Continuity test** under Electricity |
 
@@ -49,5 +49,6 @@ Original PDS goals: virtual multimeter in continuity mode, probes, material path
 - **Coordinates**: Sample ends and probe tips are **normalized** (0–1) in the **work-area** div (same box as `getBoundingClientRect` for dragging).
 - **READY / Test gating**: `sampleEndsBridgingProbes` requires each end within **`SAMPLE_TO_PROBE_SNAP_NORM`** (default **0.08**) of **some** tip, with one end per tip (matched or swapped). **`MIN_SAMPLE_SEP`** (0.05) prevents the ends from sitting on top of each other.
 - **Continuity result**: `continuity = !pathBroken && wireMaterial === "copper"` after bridging and span checks pass.
+- **LCD on failed test**: `continuityFailDisplay` — **`OPEN`** when the sample path has a gap (`pathBroken`), **`HI Ω`** when the path is complete but the material is wood or plastic (high resistance / no useful current), **`ALIGN`** / **`MOVE ENDS`** for immediate failures (probes not bridged or ends too close).
 - **Audio**: On success, a **sustained** tone runs until `readingLatched && display === "CLOSED" && led === "green" && copper` is no longer true (e.g. drag an end, change material, toggle path, new test, or leave the page).
 - **Layout**: `workDims` from `ResizeObserver` + layout effect; tips recomputed when size or image changes. If the box is tiny (either client dimension under **8 px**), `recalcProbeTips` skips updating (tips stay previous or fallback).
